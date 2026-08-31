@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA DE ESTOQUE // EDIÇÃO</title>
+    <link rel="stylesheet" href="style.css">
+    <script defer src="edicao.js"></script>
+
+</head>
+<body>
+    <div class="atom-container">
+        <header>
+            <div>
+                <h1>MÓDULO DE EDIÇÃO</h1>
+                <p style="font-size: 0.9rem; color: #a89f91; letter-spacing: 1px;">ACESSO E MANUTENÇÃO DO BANCO DE DADOS</p>
+            </div>
+            <div class="sys-info">
+                <p>BOSTON // 2076</p>
+                <p id="clock">00:00:00</p>
+            </div>
+        </header>
+
+        <main class="form-container">
+            <!-- Barra de Busca -->
+            <div class="search-section">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label for="busca_codigo">LOCALIZAR PRODUTO (CÓDIGO DE BARRAS)</label>
+                    <input type="text" id="busca_codigo" autofocus autocomplete="off" placeholder="Bipe o código para buscar...">
+                </div>
+                <button type="button" class="btn-buscar" onclick="buscarProduto()">[ ENTER ] BUSCAR</button>
+            </div>
+
+            <hr class="atom-divider">
+
+            <!-- Formulário de Edição (Inicia desabilitado) -->
+            <form id="form-edicao" style="opacity: 0.5; pointer-events: none;">
+                <div class="form-group">
+                    <label for="nome_edit">NOME DO PRODUTO</label>
+                    <input type="text" id="nome_edit" required autocomplete="off">
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="quantidade_edit">ESTOQUE ATUAL</label>
+                        <input type="number" id="quantidade_edit" required min="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="preco_edit">NOVO PREÇO DE VENDA (R$)</label>
+                        <input type="number" id="preco_edit" required min="0" step="0.01">
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button type="button" class="btn-voltar" onclick="window.location.href='index.html'">[ ESC ] VOLTAR</button>
+                    <button type="submit" class="btn-salvar" id="btn-atualizar">[ F4 ] ATUALIZAR DADOS</button>
+                </div>
+            </form>
+        </main>
+
+        <footer>
+            <span id="status-log">:: MODO DE MANUTENÇÃO // AGUARDANDO BUSCA <span class="blink">■</span></span>
+            <span>ACESSO AUTORIZADO</span>
+        </footer>
+    </div>
+    
+</body>
+</html>

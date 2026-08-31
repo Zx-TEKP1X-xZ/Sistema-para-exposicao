@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA DE ESTOQUE // CATÁLOGO VISUAL</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="atom-container">
+        <header>
+            <div>
+                <h1>INVENTÁRIO & BANCO DE DADOS</h1>
+                <p style="font-size: 0.9rem; color: #a89f91; letter-spacing: 1px;">TABELA VISUAL DE PRODUTOS CADASTRADOS</p>
+            </div>
+            <div class="sys-info">
+                <p>BOSTON // 2076</p>
+                <p id="clock">00:00:00</p>
+            </div>
+        </header>
+
+        <!-- BARRA DE FILTRO E TOTALIZADOR -->
+        <div class="catalog-toolbar">
+            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                <input type="text" id="filtro_catalogo" oninput="filtrarTabela()" autocomplete="off" placeholder="🔍 Filtrar por nome ou código de barras...">
+            </div>
+            <div class="total-badge">
+                TOTAL DE REGISTROS: <span id="qtd-registros">0</span>
+            </div>
+        </div>
+
+        <!-- TABELA DE BANCO DE DADOS COM SCROLL -->
+        <main class="table-container-scroll">
+            <table class="atom-table-db">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">ID</th>
+                        <th style="width: 160px;">CÓD. BARRAS</th>
+                        <th>NOME DO PRODUTO</th>
+                        <th style="width: 160px;">CATEGORIA</th>
+                        <th style="width: 110px; text-align: center;">ESTOQUE</th>
+                        <th style="width: 130px; text-align: right;">CUSTO (R$)</th>
+                        <th style="width: 130px; text-align: right;">VENDA (R$)</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-catalogo-body">
+                    <!-- Registros inseridos via JS -->
+                </tbody>
+            </table>
+        </main>
+
+        <div class="action-buttons" style="margin-top: 15px;">
+            <button type="button" class="btn-voltar" onclick="window.location.href='index.html'" style="max-width: 200px;">[ ESC ] VOLTAR</button>
+        </div>
+
+        <footer>
+            <span id="status-log">:: VISUALIZADOR DE TABELA DE BANCO DE DADOS ATIVO <span class="blink">■</span></span>
+            <span>MODO CONSULTA</span>
+        </footer>
+    </div>
+    
+    <script src="produtos.js"></script>
+</body>
+</html>
