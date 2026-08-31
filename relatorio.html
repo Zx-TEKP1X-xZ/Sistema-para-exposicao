@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios - Papelaria Costa Oeste</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-retro">
+
+    <main class="relatorio-container">
+
+        <!-- =====================================================
+             CABEÇALHO
+             ===================================================== -->
+
+        <header class="relatorio-topo">
+
+            <div class="marca">
+
+                <div class="marca-icone">
+                    PC
+                </div>
+
+                <div class="marca-texto">
+                    <h1>PAPELARIA COSTA OESTE</h1>
+                    <p>SISTEMA DE GERENCIAMENTO // RELATÓRIOS</p>
+                </div>
+
+            </div>
+
+            <div class="status-sistema">
+                <span class="status-ponto"></span>
+                SISTEMA ONLINE
+            </div>
+
+        </header>
+
+
+        <!-- =====================================================
+             BOTÕES
+             ===================================================== -->
+
+        <div class="barra-acoes no-print">
+
+            <div class="acoes-esquerda">
+
+                <button
+                    type="button"
+                    class="btn-retro"
+                    onclick="window.location.href='index.html'">
+                    &lt; ESC &gt; VOLTAR
+                </button>
+
+                <button
+                    type="button"
+                    class="btn-imprimir"
+                    onclick="imprimirRelatorio()">
+                    [ F8 ] IMPRIMIR / PDF
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             TÍTULO
+             ===================================================== -->
+
+        <section class="titulo-area">
+
+            <h2>RELATÓRIO GERAL</h2>
+
+            <p>
+                VISÃO CONSOLIDADA DO CATÁLOGO, ESTOQUE E VALORES
+                DA PAPELARIA COSTA OESTE.
+            </p>
+
+        </section>
+
+
+        <!-- =====================================================
+             RESUMO
+             ===================================================== -->
+
+        <section class="resumo-grid">
+
+            <div class="resumo-card">
+
+                <span class="resumo-label">
+                    Total de Produtos
+                </span>
+
+                <strong
+                    class="resumo-valor"
+                    id="total-produtos">
+                    0 itens
+                </strong>
+
+            </div>
+
+
+            <div class="resumo-card">
+
+                <span class="resumo-label">
+                    Estoque Total
+                </span>
+
+                <strong
+                    class="resumo-valor"
+                    id="total-estoque">
+                    0 un
+                </strong>
+
+            </div>
+
+
+            <div class="resumo-card">
+
+                <span class="resumo-label">
+                    Valor em Estoque
+                </span>
+
+                <strong
+                    class="resumo-valor"
+                    id="valor-total-estoque">
+                    R$ 0,00
+                </strong>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             PAINEL PRINCIPAL
+             ===================================================== -->
+
+        <section class="painel-relatorio">
+
+            <div class="painel-header">
+
+                <span class="painel-header-titulo">
+                    DETALHAMENTO DO CATÁLOGO
+                </span>
+
+                <span
+                    class="painel-data"
+                    id="relatorio-data">
+                    EMISSÃO: --/--/---- --:--
+                </span>
+
+            </div>
+
+
+            <div class="tabela-container">
+
+                <table class="tabela-relatorio">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Cód.</th>
+
+                            <th>Produto / Serviço</th>
+
+                            <th>Categoria</th>
+
+                            <th style="text-align:center;">
+                                Qtd
+                            </th>
+
+                            <th style="text-align:right;">
+                                Custo Unit.
+                            </th>
+
+                            <th style="text-align:right;">
+                                Preço Venda
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="tabela-relatorio-body">
+
+                        <!--
+                            Linhas preenchidas automaticamente
+                            pelo relatorio.js
+                        -->
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- =================================================
+                 RODAPÉ
+                 ================================================= -->
+
+            <footer class="relatorio-footer">
+
+                <span>
+                    PAPELARIA COSTA OESTE
+                    // RELATÓRIO CONSOLIDADO
+                </span>
+
+                <span class="footer-terminal">
+                    STATUS: OK_
+                </span>
+
+            </footer>
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================================================
+         SCRIPT
+         ========================================================= -->
+
+    <script src="relatorio.js"></script>
+
+</body>
+</html>
