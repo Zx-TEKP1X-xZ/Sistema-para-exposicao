@@ -1,0 +1,103 @@
+/* =========================================
+   CATÁLOGO VISUAL DE BANCO DE DADOS
+   ========================================= */
+
+.catalog-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 12px;
+}
+
+#filtro_catalogo {
+    background-color: #161418;
+    border: 2px solid var(--atom-bronze);
+    color: var(--atom-cream);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1rem;
+    padding: 10px 14px;
+    border-radius: 6px;
+    outline: none;
+    width: 100%;
+}
+
+#filtro_catalogo:focus {
+    border-color: var(--atom-gold);
+}
+
+.total-badge {
+    background-color: #161418;
+    border: 1px solid var(--atom-bronze);
+    color: var(--atom-gold);
+    font-family: 'Share Tech Mono', monospace;
+    padding: 10px 15px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.table-container-scroll {
+    flex: 1;
+    overflow-y: auto;
+    border: 2px solid var(--atom-bronze);
+    border-radius: 6px;
+    background-color: #121014;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+}
+
+.table-container-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+.table-container-scroll::-webkit-scrollbar-track {
+    background: #121014;
+    border-left: 1px solid var(--atom-bronze);
+}
+.table-container-scroll::-webkit-scrollbar-thumb {
+    background: var(--atom-terracotta);
+    border-radius: 4px;
+}
+.table-container-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--atom-gold);
+}
+
+.atom-table-db {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.95rem;
+    text-align: left;
+}
+
+.atom-table-db th {
+    background-color: #231e28;
+    color: var(--atom-gold);
+    padding: 10px;
+    border-bottom: 2px solid var(--atom-gold);
+    border-right: 1px solid var(--atom-bronze);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.atom-table-db td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #28232e;
+    border-right: 1px solid #231f28;
+    color: var(--atom-cream);
+    white-space: nowrap;
+}
+
+.atom-table-db tbody tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.atom-table-db tbody tr:hover {
+    background-color: rgba(212, 175, 55, 0.15);
+}
+
+.tag-alerta-estoque {
+    color: #ff5555;
+    font-weight: bold;
+}

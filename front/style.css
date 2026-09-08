@@ -1,0 +1,99 @@
+/* ====================================================
+   SISTEMA DE ESTOQUE // BOSTON 2076 (ATOMPUNK / ART DÉCO)
+   ==================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Share+Tech+Mono&display=swap');
+
+:root {
+    --atom-gold: #d4af37;
+    --atom-bronze: #8c6239;
+    --atom-cream: #f4eae1;
+    --atom-terracotta: #c85a32;
+    --atom-bg: #2b262d;
+    --atom-panel: #1e1b20;
+    --atom-border: 2px solid var(--atom-gold);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: radial-gradient(circle, #3d3541 0%, #1a171d 100%);
+    color: var(--atom-cream);
+    font-family: 'Share Tech Mono', monospace;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* Container Principal Estilo Painel Art Déco / Atompunk */
+.atom-container {
+    width: 92%;
+    max-width: 1050px;
+    height: 85vh;
+    background-color: var(--atom-panel);
+    border: 3px solid var(--atom-gold);
+    border-radius: 18px;
+    padding: 30px;
+    box-shadow: 0 0 25px rgba(212, 175, 55, 0.25), inset 0 0 20px rgba(0,0,0,0.8);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Detalhes Retrofuturistas nas Bordas */
+.atom-container::before {
+    content: '';
+    position: absolute;
+    top: 6px; left: 6px; right: 6px; bottom: 6px;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 12px;
+    pointer-events: none;
+}
+
+header {
+    border-bottom: 2px solid var(--atom-terracotta);
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-shrink: 0;
+}
+
+h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 2.2rem;
+    color: var(--atom-gold);
+    letter-spacing: 3px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+}
+
+.sys-info {
+    text-align: right;
+    font-size: 1.1rem;
+    color: var(--atom-terracotta);
+    font-weight: bold;
+}
+
+footer {
+    margin-top: auto;
+    border-top: 1px solid var(--atom-bronze);
+    padding-top: 12px;
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: space-between;
+    color: var(--atom-gold);
+    flex-shrink: 0;
+}
+
+.blink {
+    animation: blinker 1.2s infinite;
+}
+@keyframes blinker { 50% { opacity: 0; } }

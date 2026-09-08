@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA DE ESTOQUE // BOSTON 2076</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="index.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+
+    <div class="atom-container">
+        <header>
+            <div>
+                <h1>ESTAÇÃO DE EXPOSIÇÃO</h1>
+                <p style="font-size: 0.9rem; color: #a89f91; letter-spacing: 1px;">SISTEMA GERENCIAL AUTOMATIZADO</p>
+            </div>
+            <div class="sys-info">
+                <p>FOZ DO IGUAÇU // 2026</p>
+                <p id="clock">00:00:00</p>
+            </div>
+        </header>
+
+        <main class="menu-grid">
+            <a href="cadastro.html" class="menu-card">
+                <div>
+                    <span class="badge">MÓDULO 01</span>
+                    <h2>CADASTRO</h2>
+                    <p>Registrar novos produtos, códigos de barras e estoque inicial.</p>
+                </div>
+            </a>
+
+            <a href="edicao.html" class="menu-card">
+                <div>
+                    <span class="badge">MÓDULO 02</span>
+                    <h2>EDIÇÃO</h2>
+                    <p>Gerenciar itens do catálogo, ajustar preços e corrigir dados.</p>
+                </div>
+            </a>
+
+            <a href="baixa.html" class="menu-card">
+                <div>
+                    <span class="badge" style="background: var(--atom-gold); color: #000;">TERMINAL</span>
+                    <h2>BAIXA RÁPIDA</h2>
+                    <p>Caixa principal. Registre saídas instantâneas via leitor de código.</p>
+                </div>
+            </a>
+
+            <a href="relatorio.html" class="menu-card">
+                <div>
+                    <span class="badge">MÓDULO 03</span>
+                    <h2>BALANÇO</h2>
+                    <p>Relatório de vendas por categoria, faturamento e lucro líquido.</p>
+                </div>
+            </a>
+            <a href="produtos.html" class="menu-card">
+                <div>
+                    <span class="badge">MÓDULO 00</span>
+                    <h2>CATÁLOGO VISUAL</h2>
+                    <p>Acesse a tabela completa de produtos, preços e estoque atual.</p>
+                </div>
+            </a>
+        </main>
+
+        <footer>
+            <span id="status-log">:: SISTEMA PRONTO // AGUARDANDO SELEÇÃO <span class="blink">■</span></span>
+            <span>MODO LOCAL // CONEXÃO OK</span>
+        </footer>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA DE ESTOQUE // TERMINAL CAIXA</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="baixa.css">
+    <script defer src="baixa.js"></script>
+</head>
+<body>
+    <div class="atom-container">
+        <header>
+            <div>
+                <h1>TERMINAL DE CAIXA</h1>
+                <p style="font-size: 0.9rem; color: #a89f91; letter-spacing: 1px;">PDV CONTÍNUO // BIPAGEM RÁPIDA E FECHAMENTO DE PEDIDO</p>
+            </div>
+            <div class="sys-info">
+                <p>FOZ DO IGUAÇU // 2026</p>
+                <p id="clock">00:00:00</p>
+            </div>
+        </header>
+
+        <main class="caixa-container">
+            <div class="caixa-grid">
+                <!-- COLUNA ESQUERDA: LEITOR E LISTA DE PRODUTOS (CUPOM) -->
+                <section class="painel-leitor-itens">
+                    <!-- ENTRADA DO SCANNER / CÓDIGO DE BARRAS -->
+                    <form id="form-scan" onsubmit="event.preventDefault(); biparProduto();" class="scanner-section">
+                        <div class="input-grupo-bip">
+                            <label for="codigo_barras_baixa">CÓDIGO DE BARRAS (BIPE AQUI)</label>
+                            <div class="scanner-input-row">
+                                <input type="text" id="codigo_barras_baixa" autofocus autocomplete="off" placeholder="Bipe o código (ex: 78910001)...">
+                                <div class="qtd-wrapper">
+                                    <label for="qtd_scanner">QTD</label>
+                                    <input type="number" id="qtd_scanner" value="1" min="1" max="999">
+                                </div>
+                                <button type="submit" class="btn-adicionar">[ ENTER ] BIPAR</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- TABELA DE ITENS DA VENDA -->
+                    <div class="tabela-header-fixo">
+                        <span>#</span>
+                        <span>CÓDIGO</span>
+                        <span>DESCRIÇÃO</span>
+                        <span class="txt-center">QTD</span>
+                        <span class="txt-right">UNIT.</span>
+                        <span class="txt-right">TOTAL</span>
+                        <span class="txt-center">AÇÃO</span>
+                    </div>
+
+                    <div class="itens-tabela-wrapper" id="tabela-scroll">
+                        <table class="itens-tabela">
+                            <tbody id="lista-itens-corpo">
+                                <!-- Preenchido dinamicamente via JS -->
+                            </tbody>
+                        </table>
+                        <div id="msg-vazio" class="msg-caixa-vazio">
+                            <span>:: NENHUM PRODUTO BIPADO ::</span>
+                            <small>Bipe ou digite o código acima para adicionar itens ao cupom</small>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- COLUNA DIREITA: DISPLAY DE TOTAIS E FECHAMENTO -->
+                <section class="painel-fechamento">
+                    <!-- DISPLAY DIGITAL DO TOTAL -->
+                    <div class="display-total-caixa">
+                        <span class="display-label">TOTAL A PAGAR</span>
+                        <div class="display-valor" id="display-total-valor">R$ 0,00</div>
+                    </div>
+
+                    <!-- RESUMO DE VALORES E DESCONTOS -->
+                    <div class="resumo-card">
+                        <div class="resumo-linha">
+                            <span>QUANTIDADE DE ITENS:</span>
+                            <strong id="resumo-total-itens">0</strong>
+                        </div>
+                        <div class="resumo-linha">
+                            <span>SUBTOTAL:</span>
+                            <strong id="resumo-subtotal">R$ 0,00</strong>
+                        </div>
+
+                        <div class="desconto-section">
+                            <div class="desconto-topo">
+                                <label for="desconto-geral">DESCONTO:</label>
+                                <div class="desconto-input-box">
+                                    <input type="number" id="desconto-geral" min="0" max="100" value="0" step="1" oninput="atualizarDescontoGeral()">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <div class="desconto-atalhos">
+                                <button type="button" class="btn-desc-tag" onclick="aplicarDescontoRapido(0)">0%</button>
+                                <button type="button" class="btn-desc-tag" onclick="aplicarDescontoRapido(5)">5%</button>
+                                <button type="button" class="btn-desc-tag" onclick="aplicarDescontoRapido(10)">10%</button>
+                                <button type="button" class="btn-desc-tag" onclick="aplicarDescontoRapido(15)">15%</button>
+                            </div>
+                        </div>
+
+                        <!-- FORMA DE PAGAMENTO -->
+                        <div class="pagamento-section">
+                            <label>FORMA DE PAGAMENTO:</label>
+                            <div class="pagamento-opcoes">
+                                <button type="button" class="btn-pagamento ativo" data-metodo="DINHEIRO" onclick="selecionarPagamento(this)">DINHEIRO</button>
+                                <button type="button" class="btn-pagamento" data-metodo="PIX" onclick="selecionarPagamento(this)">PIX</button>
+                                <button type="button" class="btn-pagamento" data-metodo="DÉBITO" onclick="selecionarPagamento(this)">DÉBITO</button>
+                                <button type="button" class="btn-pagamento" data-metodo="CRÉDITO" onclick="selecionarPagamento(this)">CRÉDITO</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BOTÕES DE AÇÃO DO TERMINAL -->
+                    <div class="botoes-acoes-caixa">
+                        <button type="button" class="btn-fechar-venda" id="btn-finalizar-pedido" onclick="fecharPedido()">
+                            [ F4 ] FECHAR PEDIDO
+                        </button>
+                        <div class="botoes-secundarios-row">
+                            <button type="button" class="btn-limpar" onclick="limparVenda()">[ F2 ] LIMPAR</button>
+                            <button type="button" class="btn-voltar" onclick="window.location.href='index.html'">[ ESC ] VOLTAR</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- MODAL DE PEDIDO FINALIZADO COM SUCESSO -->
+        <div id="modal-sucesso" class="modal-overlay hidden">
+            <div class="modal-conteudo">
+                <div class="modal-header">
+                    <h2>✓ VENDA CONCLUÍDA</h2>
+                </div>
+                <div class="modal-body" id="modal-resumo-texto">
+                    <!-- Preenchido dinamicamente -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-novo-pedido" onclick="fecharModalSucesso()">[ ENTER ] NOVO PEDIDO</button>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <span id="status-log">:: MODO DE CAIXA CONTÍNUO // AGUARDANDO BIPE NO LEITOR <span class="blink">■</span></span>
+            <span>TERMINAL ATIVO</span>
+        </footer>
+    </div>
+</body>
+</html>
