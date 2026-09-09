@@ -15,8 +15,8 @@ app.use(
     })
 );
 
-app.get('/', (c) => c.redirect('/login.html'));
-app.use('/*', serveStatic({ root: './public' }));
+app.get('/', (c) => c.redirect('/index.html'));
+app.use('/*', serveStatic({ root: './front' }));
 
 app.get('/api/catalogo', async (c) =>{
     try{
@@ -35,4 +35,11 @@ app.get('/api/catalogo', async (c) =>{
             mensagem: "Erro ao busca produtos no banco de dados"
         }, 500);
     }
+});
+
+const port = Number(process.env.PORT) || 3000;
+
+serve({
+    fetch: app.fetch,
+    port
 });
