@@ -29,25 +29,19 @@
     background: var(--atom-gold);
 }
 
+/* Estrutura Padrão dos Campos */
 .form-group {
-    margin-bottom: 16px;
+    margin-bottom: 10px;
     display: flex;
     flex-direction: column;
-    flex-shrink: 0;
-}
-
-.form-grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
     flex-shrink: 0;
 }
 
 .form-container label {
     font-family: 'Share Tech Mono', monospace;
     color: var(--atom-terracotta);
-    font-size: 1rem;
-    margin-bottom: 6px;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
     font-weight: bold;
     letter-spacing: 1px;
 }
@@ -57,8 +51,8 @@
     border: 2px solid var(--atom-bronze);
     color: var(--atom-cream);
     font-family: 'Share Tech Mono', monospace;
-    font-size: 1.1rem;
-    padding: 10px 12px;
+    font-size: 1rem;
+    padding: 8px 10px;
     border-radius: 6px;
     outline: none;
     transition: all 0.3s ease;
@@ -74,20 +68,57 @@
     color: #554e59;
 }
 
-/* Botões de Ação do Formulário */
+/* =========================================
+   GRID DE 2 E 3 COLUNAS (LADO A LADO)
+   ========================================= */
+
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    flex-shrink: 0;
+}
+
+/* Trava para 3 campos na mesma linha (Estoque, Custo, Preço) */
+.form-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    flex-shrink: 0;
+    margin-bottom: 8px;
+}
+
+.form-grid-3 .form-group {
+    margin-bottom: 0;
+}
+
+.form-grid-3 label {
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+}
+
+.form-grid-3 input {
+    font-size: 1.15rem;
+    padding: 9px 12px;
+}
+
+/* =========================================
+   BOTÕES DE AÇÃO DO FORMULÁRIO
+   ========================================= */
+
 .action-buttons {
     display: flex;
     gap: 15px;
-    margin-top: 10px;
+    margin-top: 12px;
     padding-bottom: 5px;
     flex-shrink: 0;
 }
 
 .btn-salvar, .btn-voltar, .btn-excluir {
     flex: 1;
-    padding: 12px;
+    padding: 10px;
     font-family: 'Share Tech Mono', monospace;
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: bold;
     cursor: pointer;
     border-radius: 6px;
@@ -140,11 +171,6 @@
     box-shadow: 0 2px 0px #4d1312;
 }
 
-.btn-excluir:active {
-    transform: translateY(4px);
-    box-shadow: 0 0 0px #4d1312;
-}
-
 /* Busca e Divisores da Edição */
 .search-section {
     display: flex;
@@ -160,7 +186,7 @@
     color: #fff;
     border: 2px solid var(--atom-gold);
     font-family: 'Share Tech Mono', monospace;
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: bold;
     cursor: pointer;
     border-radius: 6px;
@@ -172,11 +198,6 @@
     background-color: #6e4b2a;
     transform: translateY(2px);
     box-shadow: 0 2px 0px #5a3d21;
-}
-
-.btn-buscar:active {
-    transform: translateY(4px);
-    box-shadow: 0 0 0px #5a3d21;
 }
 
 .atom-divider {
