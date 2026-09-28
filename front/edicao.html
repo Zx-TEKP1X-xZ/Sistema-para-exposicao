@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SISTEMA DE ESTOQUE // EDIÇÃO</title>
+    <title>EDIÇÃO - SISTEMA DE CAIXA</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="form.css">
     <script defer src="edicao.js"></script>
@@ -41,15 +41,26 @@
                     <input type="text" id="nome_edit" required autocomplete="off">
                 </div>
 
-                <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="categoria_edit">CATEGORIA</label>
+                    <input type="text" id="categoria_edit" placeholder="Ex: CÓPIAS, PLASTIFICAÇÃO..." autocomplete="off">
+                </div>
+
+                <!-- Grid com 3 Colunas: Estoque, Custo e Preço de Venda -->
+                <div class="form-grid-3">
                     <div class="form-group">
-                        <label for="quantidade_edit">ESTOQUE ATUAL</label>
+                        <label for="quantidade_edit">ESTOQUE</label>
                         <input type="number" id="quantidade_edit" required min="0">
                     </div>
 
                     <div class="form-group">
-                        <label for="preco_edit">NOVO PREÇO DE VENDA (R$)</label>
-                        <input type="number" id="preco_edit" required min="0" step="0.01">
+                        <label for="custo_edit">CUSTO (R$)</label>
+                        <input type="number" id="custo_edit" required min="0" step="0.01" placeholder="0.00">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="preco_edit">PREÇO VENDA (R$)</label>
+                        <input type="number" id="preco_edit" required min="0" step="0.01" placeholder="0.00">
                     </div>
                 </div>
 
@@ -66,6 +77,35 @@
             <span>ACESSO AUTORIZADO</span>
         </footer>
     </div>
-    
+    <div id="modal-alerta" class="modal-overlay" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span class="modal-title">:: AVISO DO SISTEMA</span>
+                <button class="btn-fechar-modal" onclick="fecharAlerta()">X</button>
+            </div>
+            <div class="modal-body">
+                <p id="alerta-mensagem">Mensagem aqui...</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal-ok" onclick="fecharAlerta()">[ ENTER ] OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-confirmacao" class="modal-overlay" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span class="modal-title">:: CONFIRMAÇÃO DO SISTEMA</span>
+                <button type="button" class="btn-fechar-modal" onclick="fecharModalConfirmacao(false)">X</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-mensagem">Tem certeza de que deseja realizar esta ação?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="fecharModalConfirmacao(false)">[ ESC ] CANCELAR</button>
+                <button type="button" class="btn-confirm" id="btn-modal-sim">[ ENTER ] CONFIRMAR</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

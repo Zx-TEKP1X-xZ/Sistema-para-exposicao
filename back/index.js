@@ -79,6 +79,130 @@ app.post('api/cadastro', async (c) => {
     }
 });
 
+app.get('api/produtos/buscar', async (c) =>{
+    try{
+        const codigo = c.req.query('codigo'); // Lê ?codigo=... da URL
+
+        if (!codigo){
+            return c.json ({
+                sucesso: false,
+                mensagem: "Codigo de barras não informado"
+            }, 400);
+        }
+
+        const result = await pool.query(`
+            SELECT * FROM produtos WHERE codigo_barras = $1 LIMIT 1
+            `, [codigo.trim()]);
+
+        if (result.rows === 0){
+            return c.json ({
+                sucesso: false, mensagem: "Produto não encontrado"}, 404);
+        }
+
+        return c.json({
+            sucesso: true,
+            produto: result.rows[0]
+       }); 
+    }
+
+    catch (erro){
+        console.error(":: [ERRO BUSCA]", erro);
+        return c.json({sucesso: false, mensagem: "Erro ao buscar produto no banco"}, 500);
+    }
+});
+
+app.delete('/api/produtos/:id', async (c) =>{
+    try{
+        const idParam = c.req.param('id');
+        const idNum = parseInt(idParam, 10);
+        console.log(":: ID RECEBIDO NA ROTA DELETE:", idParam);
+
+        if (isNaN(idNum)){
+            return c.json({sucesso: false, mensagem: "Id invalido fornecido"},400);
+        }
+
+        const apagar = await pool.query(`DELETE FROM produtos WHERE id = $1 RETURNING *;`, [idNum]);
+
+        if (apagar.rowCount === 0 ){
+            return c.json({sucesso: false, mensagem: "Produto não encontrado"}, 404);
+        }
+
+        return c.json({
+            sucesso: true,
+            mensagem: "Produto excluido com sucesso"
+        });
+    }
+
+    catch(erro){
+        console.error(":: [ERRO DELETE]", erro);
+        
+        if (error.code === '23503'){
+            return c.json({
+                sucesso: false,
+                mensagem: "Não é possivel excluir pois possui registros vinculados"
+            }, 400);
+        }
+        return c.json({
+            sucesso: false,
+            mensagem: "Erro interno no servidor ao excluir produtos"
+        }, 500);
+    }
+});
+
+
+app.put('/api/produtos/:id', async (c) => {
+    const body = await c.req.json();
+    const {nomeEdit, quantidadeEdit, custoEdit, precoEdit, categoriaEdit} = body;
+    const idParam = c.req.param('id');
+    const idNum = parseInt(idParam, 10);
+    console.log(":: ID RECEBIDO NA ROTA DELETE:", idParam);
+
+     if (isNaN(idNum)){
+            return c.json({sucesso: false, mensagem: "Id invalido fornecido"},400);
+    }
+
+    try{
+        
+        if (!nomeEdit || quantidadeEdit === undefined || custoEdit === undefined || precoEdit === undefined || !categoriaEdit){
+                return c.json({
+                    sucesso: false,
+                    mensagem: "Campos obrigatórios ausentes (código de barras, nome ou preço)!"
+                }, 400);
+        }
+
+        const resultEdit = await pool.query(`UPDATE produtos 
+            SET 
+                nome = $1, 
+                categoria = $2, 
+                estoque = $3, 
+                custo = $4, 
+                preco = $5
+            WHERE id = $6
+            RETURNING *;`, 
+            [   nomeEdit.trim(), 
+                categoriaEdit ? categoriaEdit.trim() : null, 
+                parseInt(quantidadeEdit, 10), 
+                parseFloat(custoEdit), 
+                parseFloat(precoEdit), 
+                idNum
+            ]);
+
+        if (resultEdit.rowCount === 0){
+            return c.json({sucesso: false, mensagem: "Produto não encontrado no banco de dados"}, 404);
+        }    
+
+        return c.json({
+            sucesso: true,
+            mensagem: "Produto atualizado com sucesso",
+            produto: resultEdit.rows[0]
+        })
+    }
+    catch (erro){
+        console.error(":: [ERRO UPDATE]", erro);
+        return c.json({sucesso: false, mensagem: "Erro ao atualizar produto no banco de dados"}, 500);
+    }
+});
+
 const port = Number(process.env.PORT) || 3000;
 
 serve({
