@@ -3,228 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RELATÓRIO - SISTEMA DE CAIXA</title>
+    <title>RELATÓRIO DE CAIXA E VENDAS</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="relatorio.css">
 </head>
 
 <body class="bg-retro">
 
-    <main class="relatorio-container">
+    <main class="relatorio-page">
 
-        <!-- =====================================================
-             CABEÇALHO
-             ===================================================== -->
-
-        <header class="relatorio-topo">
-
-            <div class="marca">
-
-                <div class="marca-icone">
-                    PC
-                </div>
-
-                <div class="marca-texto">
-                    <h1>PAPELARIA COSTA OESTE</h1>
-                    <p>SISTEMA DE GERENCIAMENTO // RELATÓRIOS</p>
-                </div>
-
+        <!-- CABEÇALHO DA PÁGINA -->
+        <header class="relatorio-top-header">
+            <div class="relatorio-title">
+                <h1>PAPELARIA COSTA OESTE</h1>
+                <p>SISTEMA DE GERENCIAMENTO // FECHAMENTO DE CAIXA E VENDAS</p>
             </div>
 
-            <div class="status-sistema">
-                <span class="status-ponto"></span>
-                SISTEMA ONLINE
+            <div class="relatorio-system-info">
+                <span class="online">● SISTEMA ONLINE</span><br>
+                <span>TERMINAL CAIXA 01</span>
             </div>
-
         </header>
 
 
-        <!-- =====================================================
-             BOTÕES
-             ===================================================== -->
-
-        <div class="barra-acoes no-print">
-
-            <div class="acoes-esquerda">
-
-                <button
-                    type="button"
-                    class="btn-retro"
-                    onclick="window.location.href='index.html'">
+        <!-- BARRA DE AÇÕES -->
+        <div class="relatorio-actions no-print">
+            <div class="relatorio-actions-left">
+                <button type="button" class="btn-retro" onclick="window.location.href='index.html'">
                     &lt; ESC &gt; VOLTAR
                 </button>
-
-                <button
-                    type="button"
-                    class="btn-imprimir"
-                    onclick="imprimirRelatorio()">
-                    [ F8 ] IMPRIMIR / PDF
-                </button>
-
             </div>
 
+            <div class="relatorio-actions-right">
+                <button type="button" class="btn-imprimir" onclick="imprimirRelatorio()">
+                    [ F8 ] IMPRIMIR / PDF
+                </button>
+            </div>
         </div>
 
 
-        <!-- =====================================================
-             TÍTULO
-             ===================================================== -->
-
-        <section class="titulo-area">
-
-            <h2>RELATÓRIO GERAL</h2>
-
-            <p>
-                VISÃO CONSOLIDADA DO CATÁLOGO, ESTOQUE E VALORES
-                DA PAPELARIA COSTA OESTE.
-            </p>
-
+        <!-- TÍTULO DA SEÇÃO -->
+        <section class="relatorio-section-title">
+            <strong>DEMONSTRATIVO FINANCEIRO DE MOVIMENTAÇÕES</strong>
+            <span id="relatorio-data">EMISSÃO: --/--/---- --:--</span>
         </section>
 
 
-        <!-- =====================================================
-             RESUMO
-             ===================================================== -->
-
-        <section class="resumo-grid">
-
-            <div class="resumo-card">
-
-                <span class="resumo-label">
-                    Total de Produtos
-                </span>
-
-                <strong
-                    class="resumo-valor"
-                    id="total-produtos">
-                    0 itens
-                </strong>
-
+        <!-- CARDS DE RESUMO FINANCEIRO (FATURAMENTO, LUCRO E ITENS) -->
+        <section class="relatorio-grid-cards">
+            
+            <div class="card-resumo card-itens">
+                <span>Itens Vendidos</span>
+                <strong id="total-itens-vendidos">0 un</strong>
             </div>
 
-
-            <div class="resumo-card">
-
-                <span class="resumo-label">
-                    Estoque Total
-                </span>
-
-                <strong
-                    class="resumo-valor"
-                    id="total-estoque">
-                    0 un
-                </strong>
-
+            <div class="card-resumo card-faturamento">
+                <span>Faturamento Total</span>
+                <strong id="total-faturado">R$ 0,00</strong>
             </div>
 
-
-            <div class="resumo-card">
-
-                <span class="resumo-label">
-                    Valor em Estoque
-                </span>
-
-                <strong
-                    class="resumo-valor"
-                    id="valor-total-estoque">
-                    R$ 0,00
-                </strong>
-
+            <div class="card-resumo card-lucro">
+                <span>Lucro Bruto Total</span>
+                <strong id="total-lucro">R$ 0,00</strong>
             </div>
 
         </section>
 
 
-        <!-- =====================================================
-             PAINEL PRINCIPAL
-             ===================================================== -->
-
-        <section class="painel-relatorio">
-
-            <div class="painel-header">
-
-                <span class="painel-header-titulo">
-                    DETALHAMENTO DO CATÁLOGO
-                </span>
-
-                <span
-                    class="painel-data"
-                    id="relatorio-data">
-                    EMISSÃO: --/--/---- --:--
-                </span>
-
-            </div>
-
-
-            <div class="tabela-container">
-
-                <table class="tabela-relatorio">
-
-                    <thead>
-
-                        <tr>
-
-                            <th>Cód.</th>
-
-                            <th>Produto / Serviço</th>
-
-                            <th>Categoria</th>
-
-                            <th style="text-align:center;">
-                                Qtd
-                            </th>
-
-                            <th style="text-align:right;">
-                                Custo Unit.
-                            </th>
-
-                            <th style="text-align:right;">
-                                Preço Venda
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody id="tabela-relatorio-body">
-
-                        <!--
-                            Linhas preenchidas automaticamente
-                            pelo relatorio.js
-                        -->
-
-                    </tbody>
-
-                </table>
-
-            </div>
+        <!-- TABELA DE DETALHAMENTO DE VENDAS -->
+        <div class="relatorio-table-wrapper">
+            <table class="tabela-relatorio">
+                <thead>
+                    <tr>
+                        <th>Cód. Barras</th>
+                        <th>Produto / Descrição</th>
+                        <th style="text-align:center;">Qtd. Venda</th>
+                        <th style="text-align:center;">Pagamento</th>
+                        <th style="text-align:right;">Custo Total</th>
+                        <th style="text-align:right;">Faturado (Venda)</th>
+                        <th style="text-align:right;">Lucro Obter</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-relatorio-body">
+                    <!-- Preenchido via JS -->
+                </tbody>
+            </table>
+        </div>
 
 
-            <!-- =================================================
-                 RODAPÉ
-                 ================================================= -->
-
-            <footer class="relatorio-footer">
-
-                <span>
-                    PAPELARIA COSTA OESTE
-                    // RELATÓRIO CONSOLIDADO
-                </span>
-
-                <span class="footer-terminal">
-                    STATUS: OK_
-                </span>
-
-            </footer>
-
-        </section>
+        <!-- RODAPÉ -->
+        <footer class="relatorio-footer">
+            <span>PAPELARIA COSTA OESTE // RELATÓRIO DE FECHAMENTO CONSOLIDADO</span>
+            <span class="relatorio-footer-status">STATUS CAIXA: CONCILIADO_</span>
+        </footer>
 
     </main>
-
-
-    <!-- =========================================================
-         SCRIPT
-         ========================================================= -->
 
     <script src="relatorio.js"></script>
 

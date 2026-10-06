@@ -9,63 +9,97 @@ setInterval(updateClock, 1000);
 updateClock();
 
 // Base de Dados Simulado (Conectará ao PostgreSQL/Hono futuramente)
-const listaProdutosRelatorio = [
-    { id: 1, codigo: "78910001", nome: "Caderno Universitário Fallout", categoria: "Papelaria", estoque: 42, custo: 18.00, preco: 35.50 },
-    { id: 2, codigo: "78910002", nome: "Caneta Esferográfica Dourada", categoria: "Escritório", estoque: 120, custo: 1.20, preco: 4.00 },
-    { id: 3, codigo: "78910003", nome: "Mochila Lona Resistente", categoria: "Acessórios", estoque: 3, custo: 90.00, preco: 185.00 },
-    { id: 4, codigo: "78910004", nome: "Tinta Acrílica Terracotta", categoria: "Artes", estoque: 15, custo: 8.50, preco: 17.50 },
-    { id: 5, codigo: "78910005", nome: "Estojo Metálico Vintage", categoria: "Escritório", estoque: 8, custo: 20.00, preco: 45.00 },
-    { id: 6, codigo: "78910006", nome: "Bloco de Notas Atompunk A5", categoria: "Papelaria", estoque: 25, custo: 6.00, preco: 14.00 },
-    { id: 7, codigo: "78910007", nome: "Pincel Nº 6 Cabo Vermelho", categoria: "Artes", estoque: 2, custo: 7.00, preco: 15.50 }
-];
 
 function formatarMoeda(valor) {
     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-function carregarRelatorio() {
+document.addEventListener('DOMContentLoaded', () => {
+    carregarRelatorio();
+});
+
+async function carregarRelatorio() {
     const tbody = document.getElementById('tabela-relatorio-body');
     const elData = document.getElementById('relatorio-data');
-    const elTotalProdutos = document.getElementById('total-produtos');
-    const elTotalEstoque = document.getElementById('total-estoque');
-    const elValorTotalEstoque = document.getElementById('valor-total-estoque');
+    const elTotalItens = document.getElementById('total-itens-vendidos');
+    const elTotalFaturado = document.getElementById('total-faturado');
+    const elTotalLucro = document.getElementById('total-lucro');
 
     if (!tbody) return;
 
-    // Data de Emissão
+    // Declaração dos acumuladores no início da função
+    let totalItensVendidos = 0;
+    let acumuladorFaturamento = 0;
+    let acumuladorLucro = 0;
+
+    // Atualiza data/hora da emissão
     if (elData) {
-        elData.innerText = `Emissão: ${new Date().toLocaleString('pt-BR')}`;
+        elData.innerText = `EMISSÃO: ${new Date().toLocaleString('pt-BR')}`;
     }
 
-    tbody.innerHTML = '';
-    let acumuladorEstoque = 0;
-    let acumuladorValorTotal = 0;
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Carregando dados...</td></tr>';
 
-    listaProdutosRelatorio.forEach(item => {
-        acumuladorEstoque += item.estoque;
-        acumuladorValorTotal += (item.estoque * item.preco);
+    try {
+        const resposta = await fetch('/api/relatorio');
+        const dados = await resposta.json();
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${item.codigo}</td>
-            <td><strong>${item.nome}</strong></td>
-            <td>${item.categoria}</td>
-            <td style="text-align: center;">${item.estoque} un</td>
-            <td style="text-align: right;">${formatarMoeda(item.custo)}</td>
-            <td style="text-align: right;"><strong>${formatarMoeda(item.preco)}</strong></td>
-        `;
-        tbody.appendChild(tr);
-    });
+        const lista = dados.resultado || [];
 
-    // Atualiza os Cards Superiores
-    if (elTotalProdutos) elTotalProdutos.innerText = `${listaProdutosRelatorio.length} cadastrados`;
-    if (elTotalEstoque) elTotalEstoque.innerText = `${acumuladorEstoque} itens`;
-    if (elValorTotalEstoque) elValorTotalEstoque.innerText = formatarMoeda(acumuladorValorTotal);
+        if (lista.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px;">Nenhuma movimentação registrada no caixa.</td></tr>`;
+            atualizarCards(0, 0, 0);
+            return;
+        }
+
+        tbody.innerHTML = '';
+
+        lista.forEach(item => {
+            const qtd = Number(item.quantidade) || 0;
+            const custoTotal = Number(item.custo_total) || (qtd * (Number(item.custo_unitario) || 0));
+            const faturamento = Number(item.faturamento) || Number(item.preco_final) || 0;
+            const lucro = Number(item.lucro) || (faturamento - custoTotal);
+
+            // Se for saída (venda), soma aos totais do caixa
+            if (item.tipo === 'SAIDA' || !item.tipo) {
+                totalItensVendidos += qtd;
+                acumuladorFaturamento += faturamento;
+                acumuladorLucro += lucro;
+            }
+
+            const tr = document.createElement('tr');
+            const classeLucro = lucro >= 0 ? 'texto-lucro-positivo' : 'texto-lucro-negativo';
+
+            tr.innerHTML = `
+                <td>${item.codigo_barras || 'N/A'}</td>
+                <td><strong>${item.nome_produto || 'Item Divergente'}</strong></td>
+                <td style="text-align: center;">${qtd} un</td>
+                <td style="text-align: center;">${item.forma_pagamento || 'DINHEIRO'}</td>
+                <td style="text-align: right;">${formatarMoeda(custoTotal)}</td>
+                <td style="text-align: right; font-weight: bold;">${formatarMoeda(faturamento)}</td>
+                <td style="text-align: right;" class="${classeLucro}">${formatarMoeda(lucro)}</td>
+            `;
+
+            tbody.appendChild(tr);
+        });
+
+        // Atualiza os cards com os totais calculados
+        atualizarCards(totalItensVendidos, acumuladorFaturamento, acumuladorLucro);
+
+    } catch (erro) {
+        console.error("Erro ao carregar relatório de vendas: ", erro);
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #cc2929; padding: 20px;">:: [ERRO] FALHA AO CARREGAR RELATÓRIO DO SERVIDOR</td></tr>`;
+    }
+
+    function atualizarCards(itens, faturado, lucro) {
+        if (elTotalItens) elTotalItens.innerText = `${itens} un`;
+        if (elTotalFaturado) elTotalFaturado.innerText = formatarMoeda(faturado);
+        if (elTotalLucro) elTotalLucro.innerText = formatarMoeda(lucro);
+    }
 }
 
 function imprimirRelatorio() {
-    window.print();
-}
+        window.print();
+    }
 
 // Atalhos de teclado (ESC para voltar e F8 para imprimir/PDF)
 document.addEventListener('keydown', function(event) {

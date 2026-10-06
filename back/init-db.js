@@ -20,15 +20,16 @@ async function main(){
 
         await pool.query(`CREATE TABLE IF NOT EXISTS movimentacoes (
             id BIGSERIAL PRIMARY KEY,
-            produto_id BIGINT REFERENCES produtos(id) ON DELETE CASCADE,
+            produto_id BIGINT REFERENCES produtos(id) ON DELETE SET NULL,
             quantidade INT NOT NULL,
+            custo_unitario NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
             preco_original NUMERIC(10, 2) NOT NULL,
             desconto_porcentagem NUMERIC(5, 2) DEFAULT 0.00,
-            preco_final NUMERIC(10, 2) NOT NULL,
+            preco_final NUMERIC(10, 2) NOT NULL, -- Valor total cobrado na venda
             forma_pagamento VARCHAR(30) DEFAULT 'DINHEIRO', -- DINHEIRO, PIX, DÉBITO, CRÉDITO
-            tipo VARCHAR(20) DEFAULT 'SAIDA',
+            tipo VARCHAR(20) DEFAULT 'SAIDA', -- SAIDA (Venda), ENTRADA
             criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-             );`)
+        );`)
 
         console.log(":: [✓] Tabela 'movimentacoes' verificada/criada com sucesso!")
     }

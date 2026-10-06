@@ -203,6 +203,39 @@ app.put('/api/produtos/:id', async (c) => {
     }
 });
 
+app.get('/api/relatorio', async (c) =>{
+    try{
+        const resultadoRelatorio = await pool.query(`SELECT 
+                m.id,
+                m.quantidade,
+                m.custo_unitario,
+                (m.quantidade * m.custo_unitario) AS custo_total,
+                m.preco_final AS faturamento,
+                (m.preco_final - (m.quantidade * m.custo_unitario)) AS lucro,
+                m.forma_pagamento,
+                m.tipo,
+                m.criado_em,
+                COALESCE(p.codigo_barras, 'N/A') AS codigo_barras,
+                COALESCE(p.nome, 'Produto Não Registrado') AS nome_produto
+            FROM movimentacoes m
+            LEFT JOIN produtos p ON m.produto_id = p.id
+            ORDER BY m.id DESC`);
+
+        return c.json({
+            sucess: true,
+            resultado: resultadoRelatorio.rows
+        });
+    }
+
+    catch (erro) {
+        console.error("Erro ao buscar produtos: ", erro);
+        return c.json({
+            sucesso: false,
+            mensagem: "Erro ao busca produtos no banco de dados"
+        }, 500);
+    }
+});
+
 const port = Number(process.env.PORT) || 3000;
 
 serve({
