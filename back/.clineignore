@@ -1,0 +1,11 @@
+node_modules/
+dist/
+build/
+.git/
+*.log
+.env
+public/vendor/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+package.json

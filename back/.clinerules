@@ -1,0 +1,11 @@
+# Diretrizes para o Projeto (Node.js + Hono + DOM Clássico)
+
+## Stack Tecnológica
+- Backend: Node.js com framework Hono (leve, rápido, baseado em Web Standards).
+- Frontend: DOM Clássico (HTML5, CSS3, Vanilla JavaScript puro sem frameworks).
+
+## Regras de Resposta e Código
+1. **Seja Conciso:** Evite explicações textuais longas. Vá direto ao código.
+2. **Modificações Cirúrgicas:** Ao alterar arquivos, forneça apenas o diff ou o bloco alterado/função correspondente, evitando reenviar arquivos inteiros de centenas de linhas quando desnecessário.
+3. **Sem Frameworks Frontend:** Nunca sugira React, Vue, Vite (a menos que solicitado) ou bibliotecas pesadas. Use fetch nativo, manipulação direta do DOM (`document.getElementById`, etc.) e eventos nativos.
+4. **Hono Best Practices:** Mantenha as rotas limpas, modularizadas e aproveite o suporte do Hono a Web Standards.

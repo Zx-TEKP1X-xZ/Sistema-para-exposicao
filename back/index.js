@@ -29,7 +29,7 @@ app.get('/api/catalogo', async (c) =>{
     }
 
     catch (err) {
-        console.error("Erro ao buscar produtos: ", erro);
+        console.error("Erro ao buscar produtos: ", err);
         return c.json({
             sucess: false,
             mensagem: "Erro ao busca produtos no banco de dados"
@@ -37,7 +37,7 @@ app.get('/api/catalogo', async (c) =>{
     }
 });
 
-app.post('api/cadastro', async (c) => {
+app.post('/api/cadastro', async (c) => {
     try{
         const body = await c.req.json();
         const {codigo_barras, nome, categoria, estoque, custo, preco} = body;
@@ -53,7 +53,7 @@ app.post('api/cadastro', async (c) => {
             INSERT INTO produtos (codigo_barras, nome, categoria, estoque, custo, preco)
             VALUES ($1, $2, $3, $4, $5, $6) 
             RETURNING *;`, 
-            [codigo_barras.trim(), nome.trim(), categoria.trim(), parseInt(estoque) || 0, parseFloat(custo) || 0.00, parseFloat(preco) || 0.00])
+            [codigo_barras.trim(), nome.trim(), categoria ? categoria.trim() : 'Geral', parseInt(estoque) || 0, parseFloat(custo) || 0.00, parseFloat(preco) || 0.00])
 
         return c.json({
             sucesso: true,
@@ -75,11 +75,11 @@ app.post('api/cadastro', async (c) => {
         return c.json({
             sucesso: false,
             mensagem: "Erro interno ao cadastrar produto"
-        }),500;
+        }, 500);
     }
 });
 
-app.get('api/produtos/buscar', async (c) =>{
+app.get('/api/produtos/buscar', async (c) =>{
     try{
         const codigo = c.req.query('codigo'); // Lê ?codigo=... da URL
 
@@ -94,7 +94,7 @@ app.get('api/produtos/buscar', async (c) =>{
             SELECT * FROM produtos WHERE codigo_barras = $1 LIMIT 1
             `, [codigo.trim()]);
 
-        if (result.rows === 0){
+        if (result.rows.length === 0){
             return c.json ({
                 sucesso: false, mensagem: "Produto não encontrado"}, 404);
         }
@@ -136,7 +136,7 @@ app.delete('/api/produtos/:id', async (c) =>{
     catch(erro){
         console.error(":: [ERRO DELETE]", erro);
         
-        if (error.code === '23503'){
+        if (erro.code === '23503'){
             return c.json({
                 sucesso: false,
                 mensagem: "Não é possivel excluir pois possui registros vinculados"
@@ -202,6 +202,145 @@ app.put('/api/produtos/:id', async (c) => {
         return c.json({sucesso: false, mensagem: "Erro ao atualizar produto no banco de dados"}, 500);
     }
 });
+// ====================================================
+// BAIXA DE ESTOQUE / REGISTRO DE VENDA (TRANSAÇÃO)
+// ====================================================
+app.post('/api/baixa', async (c) => {
+    let body;
+
+    try {
+        body = await c.req.json();
+    } catch {
+        return c.json({ sucesso: false, mensagem: "Corpo da requisição inválido" }, 400);
+    }
+
+    const itensRecebidos = Array.isArray(body.itens) ? body.itens : [];
+    const formaPagamento = String(body.forma_pagamento || 'DINHEIRO').trim().toUpperCase();
+    let descontoPct = parseFloat(body.desconto_porcentagem);
+
+    if (isNaN(descontoPct) || descontoPct < 0) descontoPct = 0;
+    if (descontoPct > 100) descontoPct = 100;
+
+    if (itensRecebidos.length === 0) {
+        return c.json({ sucesso: false, mensagem: "Nenhum item informado para dar baixa" }, 400);
+    }
+
+    // Agrupa itens repetidos pelo mesmo código de barras
+    const itensAgrupados = new Map();
+
+    for (const item of itensRecebidos) {
+        const codigo = String(item.codigo_barras ?? item.codigo ?? '').trim();
+        const quantidade = parseInt(item.quantidade, 10);
+
+        if (!codigo || isNaN(quantidade) || quantidade <= 0) {
+            return c.json({
+                sucesso: false,
+                mensagem: "Item inválido: informe código de barras e quantidade maior que zero"
+            }, 400);
+        }
+
+        itensAgrupados.set(codigo, (itensAgrupados.get(codigo) || 0) + quantidade);
+    }
+
+    const client = await pool.connect();
+
+    try {
+        await client.query('BEGIN');
+
+        const itensBaixados = [];
+        let subtotal = 0;
+        let valorTotal = 0;
+        let totalItens = 0;
+
+        for (const [codigo, quantidade] of itensAgrupados) {
+            const buscaProduto = await client.query(`
+                SELECT id, codigo_barras, nome, estoque, custo, preco
+                FROM produtos
+                WHERE codigo_barras = $1
+                FOR UPDATE`, [codigo]);
+
+            if (buscaProduto.rowCount === 0) {
+                const erro = new Error(`Produto com código [${codigo}] não encontrado no banco`);
+                erro.status = 404;
+                throw erro;
+            }
+
+            const produto = buscaProduto.rows[0];
+            const estoqueAtual = Number(produto.estoque);
+
+            if (quantidade > estoqueAtual) {
+                const erro = new Error(`Estoque insuficiente para '${produto.nome}' // disponível: ${estoqueAtual} un`);
+                erro.status = 400;
+                throw erro;
+            }
+
+            const precoUnitario = Number(produto.preco);
+            const custoUnitario = Number(produto.custo);
+            const totalItem = Number((precoUnitario * quantidade).toFixed(2));
+            const totalItemComDesconto = Number((totalItem * (1 - descontoPct / 100)).toFixed(2));
+
+            const insertMovimentacao = await client.query(`
+                INSERT INTO movimentacoes
+                    (produto_id, quantidade, custo_unitario, preco_original, desconto_porcentagem, preco_final, forma_pagamento, tipo)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, 'SAIDA')
+                RETURNING *`,
+                [produto.id, quantidade, custoUnitario, precoUnitario, descontoPct, totalItemComDesconto, formaPagamento]);
+
+            await client.query(`
+                UPDATE produtos
+                SET estoque = estoque - $1,
+                    atualizado_em = CURRENT_TIMESTAMP
+                WHERE id = $2`, [quantidade, produto.id]);
+
+            subtotal += totalItem;
+            valorTotal += totalItemComDesconto;
+            totalItens += quantidade;
+
+            itensBaixados.push({
+                movimentacao_id: insertMovimentacao.rows[0].id,
+                produto_id: produto.id,
+                codigo_barras: produto.codigo_barras,
+                nome_produto: produto.nome,
+                quantidade,
+                preco_unitario: precoUnitario,
+                custo_unitario: custoUnitario,
+                total_item: totalItemComDesconto,
+                estoque_restante: estoqueAtual - quantidade
+            });
+        }
+
+        await client.query('COMMIT');
+
+        subtotal = Number(subtotal.toFixed(2));
+        valorTotal = Number(valorTotal.toFixed(2));
+
+        return c.json({
+            sucesso: true,
+            mensagem: "Baixa registrada com sucesso",
+            venda: {
+                forma_pagamento: formaPagamento,
+                desconto_porcentagem: descontoPct,
+                subtotal,
+                valor_desconto: Number((subtotal - valorTotal).toFixed(2)),
+                valor_total: valorTotal,
+                total_itens: totalItens,
+                itens: itensBaixados
+            }
+        }, 201);
+    } catch (erro) {
+        await client.query('ROLLBACK').catch(() => {});
+        console.error(":: [ERRO BAIXA]", erro.message);
+
+        return c.json({
+            sucesso: false,
+            mensagem: erro.status ? erro.message : "Erro interno ao registrar baixa no banco de dados"
+        }, erro.status || 500);
+    } finally {
+        client.release();
+    }
+});
+
+
 
 app.get('/api/relatorio', async (c) =>{
     try{

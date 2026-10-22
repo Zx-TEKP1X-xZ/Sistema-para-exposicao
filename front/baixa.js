@@ -12,21 +12,13 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-// 2. Banco de Dados Simulado (Será substituído pelas buscas no PostgreSQL / Hono)
-const bancoProdutosSimulado = {
-    "78910001": { id: 1, nome: "Caderno Universitário Fallout", preco: 35.50 },
-    "78910002": { id: 2, nome: "Caneta Esferográfica Dourada", preco: 4.00 },
-    "78910003": { id: 3, nome: "Mochila Lona Resistente", preco: 185.00 },
-    "78910004": { id: 4, nome: "Tinta Acrílica Terracotta", preco: 17.50 },
-    "78910005": { id: 5, nome: "Rádio Valvulado Portátil", preco: 320.00 },
-    "78910006": { id: 6, nome: "Refrigerante Nuka Cola", preco: 8.50 },
-    "78910007": { id: 7, nome: "Kit Marcadores Fluorescentes", preco: 22.90 }
-};
-
-// Estado da Venda
+// 2. Estado da Venda (produtos carregados do PostgreSQL via API)
 let carrinho = [];
 let metodoPagamento = "DINHEIRO";
-let descontoGeral = 0;
+let buscaEmAndamento = false;
+let salvandoVenda = false;
+let timerBipagem = null;
+const ATRASO_BIPAGEM = 180; // ms de pausa para reconhecer o código automaticamente
 
 // Elementos da Interface
 const inputCodigo = document.getElementById('codigo_barras_baixa');
@@ -76,8 +68,23 @@ function focarInputCodigo() {
     }
 }
 
-// 3. FUNÇÃO PRINCIPAL: BIPAR PRODUTO
-function biparProduto() {
+// Agenda a consulta automática após uma pequena pausa na digitação/bipagem
+function agendarBipagem() {
+    clearTimeout(timerBipagem);
+    timerBipagem = setTimeout(() => {
+        biparProduto();
+    }, ATRASO_BIPAGEM);
+}
+
+// 3. FUNÇÃO PRINCIPAL: BIPAR PRODUTO (CONSULTA O BANCO DE DADOS)
+async function biparProduto() {
+    if (buscaEmAndamento) {
+        return;
+    }
+
+    clearTimeout(timerBipagem);
+    timerBipagem = null;
+
     let codigo = inputCodigo ? inputCodigo.value.trim() : "";
     let qtdAdicionar = inputQtd ? parseInt(inputQtd.value) || 1 : 1;
 
@@ -91,46 +98,105 @@ function biparProduto() {
         const qtdMulti = parseInt(partes[0]);
         if (!isNaN(qtdMulti) && qtdMulti > 0) {
             qtdAdicionar = qtdMulti;
-            codigo = partes[1].trim();
+            codigo = (partes[1] || "").trim();
         }
     }
 
-    // Busca o produto no banco
-    let produtoEncontrado = bancoProdutosSimulado[codigo];
+    if (!codigo || qtdAdicionar <= 0) {
+        return;
+    }
 
-    if (produtoEncontrado) {
+    buscaEmAndamento = true;
+
+    // Limpa o campo imediatamente para não perder a próxima bipagem
+    if (inputCodigo) inputCodigo.value = "";
+
+    try {
+        if (statusLog) {
+            statusLog.innerHTML = `:: CONSULTANDO CÓDIGO [${codigo}] NO BANCO... <span class="blink">■</span>`;
+        }
+
+        const resposta = await fetch(`/api/produtos/buscar?codigo=${encodeURIComponent(codigo)}`);
+        const dados = await resposta.json();
+
+        if (!resposta.ok || !dados.sucesso || !dados.produto) {
+            emitirSomBip(false);
+            if (statusLog) {
+                const mensagemErro = (dados.mensagem || "CÓDIGO NÃO CADASTRADO NO BANCO").toUpperCase();
+                statusLog.innerHTML = `:: [ERRO] ${mensagemErro} [${codigo}] <span class="blink">■</span>`;
+            }
+            return;
+        }
+
+        const produto = dados.produto;
+        const codigoProduto = produto.codigo_barras || codigo;
+        const precoUnitario = parseFloat(produto.preco) || 0;
+        const custoUnitario = parseFloat(produto.custo) || 0;
+        const estoqueDisponivel = parseInt(produto.estoque, 10) || 0;
+
         // LÓGICA DE RECONHECIMENTO: Se já existe no carrinho, soma a quantidade
-        const itemExistente = carrinho.find(item => item.codigo === codigo);
+        const itemExistente = carrinho.find(item => String(item.produtoId) === String(produto.id));
 
         if (itemExistente) {
-            itemExistente.quantidade += qtdAdicionar;
-            itemExistente.total = itemExistente.quantidade * itemExistente.precoUnitario;
+            const novaQuantidade = itemExistente.quantidade + qtdAdicionar;
+
+            if (novaQuantidade > estoqueDisponivel) {
+                emitirSomBip(false);
+                if (statusLog) {
+                    statusLog.innerHTML = `:: [ERRO] ESTOQUE INSUFICIENTE PARA '${String(produto.nome).toUpperCase()}' // DISPONÍVEL: ${estoqueDisponivel} UN <span class="blink">■</span>`;
+                }
+                return;
+            }
+
+            itemExistente.quantidade = novaQuantidade;
+            itemExistente.precoUnitario = precoUnitario;
+            itemExistente.custoUnitario = custoUnitario;
+            itemExistente.estoqueDisponivel = estoqueDisponivel;
+            itemExistente.total = Number((novaQuantidade * precoUnitario).toFixed(2));
         } else {
+            if (qtdAdicionar > estoqueDisponivel) {
+                emitirSomBip(false);
+                if (statusLog) {
+                    statusLog.innerHTML = `:: [ERRO] ESTOQUE INSUFICIENTE PARA '${String(produto.nome).toUpperCase()}' // DISPONÍVEL: ${estoqueDisponivel} UN <span class="blink">■</span>`;
+                }
+                return;
+            }
+
             carrinho.push({
-                codigo: codigo,
-                nome: produtoEncontrado.nome,
-                precoUnitario: produtoEncontrado.preco,
+                produtoId: produto.id,
+                codigo: codigoProduto,
+                nome: produto.nome,
+                precoUnitario: precoUnitario,
+                custoUnitario: custoUnitario,
+                estoqueDisponivel: estoqueDisponivel,
                 quantidade: qtdAdicionar,
-                total: qtdAdicionar * produtoEncontrado.preco
+                total: Number((qtdAdicionar * precoUnitario).toFixed(2))
             });
         }
 
         emitirSomBip(true);
         if (statusLog) {
-            statusLog.innerHTML = `:: [✓] BIPADO: ${produtoEncontrado.nome.toUpperCase()} (Qtd: +${qtdAdicionar}) <span class="blink">■</span>`;
+            statusLog.innerHTML = `:: [✓] BIPADO: ${String(produto.nome).toUpperCase()} (Qtd: +${qtdAdicionar}) <span class="blink">■</span>`;
         }
 
-        // Limpa e reseta os campos para a próxima bipagem automática
-        inputCodigo.value = "";
         if (inputQtd) inputQtd.value = "1";
         renderizarCarrinho();
 
-    } else {
+    } catch (erro) {
+        console.error(":: [ERRO BUSCA PRODUTO]", erro);
         emitirSomBip(false);
         if (statusLog) {
-            statusLog.innerHTML = `:: [ERRO] CÓDIGO [${codigo}] NÃO CADASTRADO NO BANCO <span class="blink">■</span>`;
+            statusLog.innerHTML = `:: [ERRO] FALHA DE COMUNICAÇÃO COM O SERVIDOR <span class="blink">■</span>`;
         }
-        inputCodigo.select();
+    } finally {
+        buscaEmAndamento = false;
+        focarInputCodigo();
+
+        // Se outro código chegou enquanto esta consulta acontecia, agenda novamente
+        const codigoRestante = inputCodigo ? inputCodigo.value.trim() : "";
+        if (codigoRestante) {
+            agendarBipagem();
+        }
     }
 }
 
@@ -140,16 +206,23 @@ if (inputCodigo) {
     inputCodigo.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
+            clearTimeout(timerBipagem);
+            timerBipagem = null;
             biparProduto();
         }
     });
 
-    // Se o leitor bipar um código de 8 dígitos padrão (ex: EAN-8/78910001), aceita sem nem precisar do Enter
+    // Reconhece códigos de QUALQUER tamanho após uma pequena pausa, sem precisar do Enter
     inputCodigo.addEventListener('input', function() {
         const val = this.value.trim();
-        if (val.length === 8 && bancoProdutosSimulado[val]) {
-            biparProduto();
+
+        if (!val) {
+            clearTimeout(timerBipagem);
+            timerBipagem = null;
+            return;
         }
+
+        agendarBipagem();
     });
 }
 
@@ -202,17 +275,33 @@ function renderizarCarrinho() {
 
 // Ações manuais de alterar quantidade via botões + e -
 function alterarQuantidadeManual(index, delta) {
-    if (carrinho[index]) {
-        carrinho[index].quantidade += delta;
-        
-        if (carrinho[index].quantidade <= 0) {
-            carrinho.splice(index, 1);
-        } else {
-            carrinho[index].total = carrinho[index].quantidade * carrinho[index].precoUnitario;
-        }
-        renderizarCarrinho();
-        focarInputCodigo();
+    const item = carrinho[index];
+
+    if (!item) {
+        return;
     }
+
+    const novaQuantidade = item.quantidade + delta;
+
+    // Não permite ultrapassar o estoque disponível retornado pelo banco
+    if (delta > 0 && novaQuantidade > item.estoqueDisponivel) {
+        emitirSomBip(false);
+        if (statusLog) {
+            statusLog.innerHTML = `:: [ERRO] ESTOQUE INSUFICIENTE PARA '${String(item.nome).toUpperCase()}' // DISPONÍVEL: ${item.estoqueDisponivel} UN <span class="blink">■</span>`;
+        }
+        focarInputCodigo();
+        return;
+    }
+
+    if (novaQuantidade <= 0) {
+        carrinho.splice(index, 1);
+    } else {
+        item.quantidade = novaQuantidade;
+        item.total = Number((novaQuantidade * item.precoUnitario).toFixed(2));
+    }
+
+    renderizarCarrinho();
+    focarInputCodigo();
 }
 
 function removerItem(index) {
@@ -253,7 +342,16 @@ function selecionarPagamento(btn) {
 }
 
 // 8. FINALIZAÇÃO DO PEDIDO & MODAL
-function fecharPedido() {
+async function fecharPedido() {
+    if (salvandoVenda) {
+        return;
+    }
+
+    if (buscaEmAndamento) {
+        if (statusLog) statusLog.innerHTML = `:: AGUARDE A CONSULTA DO ÚLTIMO CÓDIGO SER CONCLUÍDA <span class="blink">■</span>`;
+        return;
+    }
+
     if (carrinho.length === 0) {
         if (statusLog) statusLog.innerHTML = `:: [ERRO] CAIXA VAZIO // BIPE ITENS ANTES DE FECHAR <span class="blink">■</span>`;
         emitirSomBip(false);
@@ -265,31 +363,89 @@ function fecharPedido() {
     const pctDesc = inputDesconto ? parseFloat(inputDesconto.value) || 0 : 0;
     const valorTotal = Math.max(0, subtotal - (subtotal * (pctDesc / 100)));
 
-    // Estrutura do Pedido para envio futuro ao Backend (PostgreSQL)
+    // Envia apenas códigos e quantidades: preços e totais são calculados no servidor
     const pedidoFinalizado = {
         forma_pagamento: metodoPagamento,
-        subtotal: subtotal,
         desconto_porcentagem: pctDesc,
-        valor_total: valorTotal,
-        itens: carrinho
+        itens: carrinho.map(item => ({
+            codigo_barras: item.codigo,
+            quantidade: item.quantidade
+        }))
     };
 
-    console.log(":: Venda Finalizada e pronta para gravação no Banco:", pedidoFinalizado);
+    salvandoVenda = true;
 
-    // Exibe resumo no Modal de Sucesso
-    const modalTexto = document.getElementById('modal-resumo-texto');
-    if (modalTexto) {
-        modalTexto.innerHTML = `
-            <strong>FORMA DE PAGAMENTO:</strong> ${metodoPagamento}<br>
-            <strong>TOTAL DE ITENS:</strong> ${carrinho.reduce((acc, i) => acc + i.quantidade, 0)} un<br>
-            <strong>DESCONTO APLICADO:</strong> ${pctDesc}%<br>
-            <hr style="border: 0; border-top: 1px dashed #555; margin: 8px 0;">
-            <span style="font-size: 1.2rem; color: #ffe066;"><strong>TOTAL PAGO:</strong> ${formatarMoeda(valorTotal)}</span>
-        `;
+    const btnFinalizar = document.getElementById('btn-finalizar-pedido');
+    if (btnFinalizar) {
+        btnFinalizar.disabled = true;
+        btnFinalizar.innerText = '[ ... ] GRAVANDO BAIXA NO BANCO';
     }
 
-    const modal = document.getElementById('modal-sucesso');
-    if (modal) modal.classList.remove('hidden');
+    if (statusLog) {
+        statusLog.innerHTML = `:: GRAVANDO BAIXA NO BANCO DE DADOS... <span class="blink">■</span>`;
+    }
+
+    try {
+        const resposta = await fetch('/api/baixa', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(pedidoFinalizado)
+        });
+
+        const dados = await resposta.json();
+
+        if (!resposta.ok || !dados.sucesso) {
+            emitirSomBip(false);
+            if (statusLog) {
+                statusLog.innerHTML = `:: [ERRO] ${(dados.mensagem || 'FALHA AO REGISTRAR A BAIXA').toUpperCase()} <span class="blink">■</span>`;
+            }
+            return;
+        }
+
+        emitirSomBip(true);
+
+        const venda = dados.venda || {};
+        const totalPago = Number(venda.valor_total ?? valorTotal);
+        const descontoAplicado = Number(venda.desconto_porcentagem ?? pctDesc);
+        const totalItensVendidos = Number(venda.total_itens ?? carrinho.reduce((acc, i) => acc + i.quantidade, 0));
+
+        console.log(":: Baixa registrada no banco de dados:", dados);
+
+        // Exibe resumo no Modal de Sucesso com os valores confirmados pelo servidor
+        const modalTexto = document.getElementById('modal-resumo-texto');
+        if (modalTexto) {
+            modalTexto.innerHTML = `
+                <strong>FORMA DE PAGAMENTO:</strong> ${venda.forma_pagamento || metodoPagamento}<br>
+                <strong>TOTAL DE ITENS:</strong> ${totalItensVendidos} un<br>
+                <strong>DESCONTO APLICADO:</strong> ${descontoAplicado}%<br>
+                <hr style="border: 0; border-top: 1px dashed #555; margin: 8px 0;">
+                <span style="font-size: 1.2rem; color: #ffe066;"><strong>TOTAL PAGO:</strong> ${formatarMoeda(totalPago)}</span>
+            `;
+        }
+
+        if (statusLog) {
+            statusLog.innerHTML = `:: [✓] BAIXA REGISTRADA NO BANCO // TOTAL: ${formatarMoeda(totalPago)} <span class="blink">■</span>`;
+        }
+
+        const modal = document.getElementById('modal-sucesso');
+        if (modal) modal.classList.remove('hidden');
+
+    } catch (erro) {
+        console.error(":: [ERRO BAIXA]", erro);
+        emitirSomBip(false);
+        if (statusLog) {
+            statusLog.innerHTML = `:: [ERRO] FALHA DE COMUNICAÇÃO COM O SERVIDOR // BAIXA NÃO REGISTRADA <span class="blink">■</span>`;
+        }
+    } finally {
+        salvandoVenda = false;
+
+        if (btnFinalizar) {
+            btnFinalizar.disabled = false;
+            btnFinalizar.innerText = '[ F4 ] FECHAR PEDIDO';
+        }
+    }
 }
 
 function fecharModalSucesso() {
@@ -299,6 +455,10 @@ function fecharModalSucesso() {
 }
 
 function limparVenda() {
+    if (salvandoVenda) {
+        return;
+    }
+
     carrinho = [];
     if (inputDesconto) inputDesconto.value = "0";
     if (inputCodigo) inputCodigo.value = "";
